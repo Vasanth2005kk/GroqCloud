@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Interface</title>
+    <style>
+        /* General Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #121212;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .chat-container {
+            width: 1000px; 
+            background-color: #1e1e1e;
+            border-radius: 10px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .chat-header {
+            background-color: #242424;
+            padding: 15px;
+            text-align: center;
+            font-size: 18px;
+            border-bottom: 1px solid #333;
+        }
+
+        .chat-header h2 {
+            color: #dcdcdc;
+        }
+
+        .chat-box {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background-color: #1e1e1e;
+            height: 500px;
+            scrollbar-width: thin;
+            scrollbar-color: #333 #1e1e1e;
+        }
+
+        .chat-box::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-box::-webkit-scrollbar-thumb {
+            background-color: #333;
+        }
+
+        .message {
+            padding: 10px 15px;
+            border-radius: 20px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+
+        .user-message {
+            align-self: flex-end;
+            background-color: #0066cc;
+            color: white;
+            border-bottom-right-radius: 0;
+        }
+
+        .bot-message {
+            align-self: flex-start;
+            background-color: #333;
+            color: white;
+            border-bottom-left-radius: 0;
+        }
+
+        .error {
+            color: #ff4d4d;
+        }
+
+        .chat-input-area {
+            display: flex;
+            padding: 15px;
+            background-color: #242424;
+            border-top: 1px solid #333;
+        }
+
+        .chat-input-area input {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #555;
+            background-color: #333;
+            color: #fff;
+            border-radius: 20px;
+            margin-right: 10px;
+            font-size: 14px;
+        }
+
+        .chat-input-area input::placeholder {
+            color: #aaa;
+        }
+
+        .chat-input-area button {
+            padding: 10px 15px;
+            background-color: #0066cc;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+
+        .chat-input-area button:hover {
+            background-color: #005bb5;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h2>GroqBot</h2>
+        </div>
+
+        <div class="chat-box" id="chat-box">
+            <!-- Messages will appear here -->
+        </div>
+
+        <div class="chat-input-area">
+            <input type="text" id="user-input" placeholder="Type your message..." />
+            <button id="send-btn">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const chatBox = document.getElementById('chat-box');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+
+        sendBtn.addEventListener('click', function() {
+            const userMessage = userInput.value;
+
+            if (userMessage.trim()) {
+                const userMessageDiv = document.createElement('div');
+                userMessageDiv.className = 'message user-message';
+                userMessageDiv.textContent = userMessage;
+                chatBox.appendChild(userMessageDiv);
+
+                chatBox.scrollTop = chatBox.scrollHeight;
+
+                fetch('/get_response', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ question: userMessage }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const botMessageDiv = document.createElement('div');
+                    botMessageDiv.className = 'message bot-message';
+                    botMessageDiv.textContent = data.response;
+                    chatBox.appendChild(botMessageDiv);
+
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                })
+                .catch(error => {
+                    const errorMessageDiv = document.createElement('div');
+                    errorMessageDiv.className = 'message bot-message error';
+                    errorMessageDiv.textContent = "Error: Unable to fetch response.";
+                    chatBox.appendChild(errorMessageDiv);
+                });
+
+                userInput.value = '';
+            }
+        });
+
+        userInput.addEventListener('keyup', function(event) {
+            if (event.key === 'Enter') {
+                sendBtn.click();
+            }
+        });
+    </script>
+</body>
+</html>
